@@ -1,5 +1,43 @@
+#' This function uses the public ontology_search function to try both databases
+#' @export
+disease_extension <- function(term, exact_match = FALSE) {
 
-#'
+  # If the ontology files aren't in the global environment, get them
+  if(!(exists("doid") & exists("ctd"))) retrieve_ontologies()
+
+  term <- term
+
+  doid_results <- ontology_search(term, doid)
+
+  message("Finished searching the Disease Ontology Database")
+  if (length(doid_results > 0)) {
+    doid_results <-
+      cbind(doid_results, rep("DISEASE_ONTOLOGY", length(doid_results)))
+  }
+  else
+    doid_results <-
+    tibble(a = character(0), b = character(0)) # If no results found, make a dummy variable
+
+
+  ctd_results <- ontology_search(term, ctd)
+
+  message("Finished searching the CTD Medic Database")
+  if (length(ctd_results) > 0) {
+    ctd_results <-
+      cbind(ctd_results, rep("CTD_DISEASE", length(ctd_results)))
+  }
+  else
+    ctd_results <-
+    tibble(a = character(0), b = character(0))  # If no results found, make a dummy variable
+
+  output <- as.tibble(rbind(doid_results, ctd_results))
+  names(output) <- c("Disease", "Source")
+  output$Source <- output$Source %>% as.factor
+  output
+
+}
+
+#' @export
 output_gene_prioritization <- function(disease_term) {
   useless_words <- c("disease", "syndrome")
   # Split the query string into individual words and get rid of common "useless words"
@@ -9,7 +47,7 @@ output_gene_prioritization <- function(disease_term) {
   if (length(term_k) > 1){print(paste("Splitting your query into", length(term_k), "searches"))}
 
   # Make sure databases are all there
-  if(!(exists("doid") & exists("ctd"))) build_databases()
+  if(!(exists("doid") & exists("ctd"))) build_gene_disease_reference()
 
   # Run extension on each Term_k
   diseases_k <- lapply(term_k, disease_extension)

@@ -2,14 +2,12 @@
 % Please edit documentation in R/database_builder.R
 \name{build_gene_id_syn}
 \alias{build_gene_id_syn}
-\title{This function pulls database information from the web and integrates it to one table for use in the score_genes function
-This should do everything the integrate_gene_disease.pl
-and the compile_gene_disease_score.pl script does in Phenolyzer}
+\title{This function downloads a list of all genes and saves a tibble of Entrez gene IDs, gene number,
+and synonyms in the global environment}
 \usage{
 build_gene_id_syn()
 }
 \description{
-This function pulls database information from the web and integrates it to one table for use in the score_genes function
-This should do everything the integrate_gene_disease.pl
-and the compile_gene_disease_score.pl script does in Phenolyzer
+This function downloads a list of all genes and saves a tibble of Entrez gene IDs, gene number,
+and synonyms in the global environment
 }

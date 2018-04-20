@@ -1,7 +1,7 @@
-#' This function pulls database information from the web and integrates it to one table for use in the score_genes function
-#' This should do everything the integrate_gene_disease.pl
-#' and the compile_gene_disease_score.pl script does in Phenolyzer
-
+#' This function downloads a list of all genes and saves a tibble of Entrez gene IDs, gene number,
+#' and synonyms in the global environment
+#' @example build_gene_id_syn() -> GENE_ID
+#' @export
 build_gene_id_syn <- function(){
   #### RefSeq Gene IDs ####
   message("Downloading the RefSeq gene information table")
@@ -9,10 +9,9 @@ build_gene_id_syn <- function(){
     HUMAN_GENE_ID <<- read_tsv("ftp://ftp.ncbi.nih.gov/gene/DATA/GENE_INFO/Mammalia/Homo_sapiens.gene_info.gz", progress = TRUE) %>%
       select(GeneID, Symbol, Synonyms)
   )
-
-  GENE_ID <<- HUMAN_GENE_ID$Symbol
 }
 
+#' @export
 build_gene_disease_reference <- function(){
   # Compile the Gene - Disease Scores
   # This is the meat of this whole project!!
