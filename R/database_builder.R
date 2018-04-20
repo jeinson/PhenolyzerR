@@ -2,30 +2,34 @@
 #' This should do everything the integrate_gene_disease.pl
 #' and the compile_gene_disease_score.pl script does in Phenolyzer
 
-build_databases <- function(){
-
+build_gene_id_syn <- function(){
   #### RefSeq Gene IDs ####
-  HUMAN_GENE_ID <- read_tsv("ftp://ftp.ncbi.nih.gov/gene/DATA/GENE_INFO/Mammalia/Homo_sapiens.gene_info.gz")
-  HUMAN_GENE_ID %<>% select(GeneID, Symbol, Synonyms)
+  message("Downloading the RefSeq gene information table")
+  suppressMessages(
+    HUMAN_GENE_ID <<- read_tsv("ftp://ftp.ncbi.nih.gov/gene/DATA/GENE_INFO/Mammalia/Homo_sapiens.gene_info.gz", progress = TRUE) %>%
+      select(GeneID, Symbol, Synonyms)
+  )
 
-  GENE_ID <- HUMAN_GENE_ID$Symbol
+  GENE_ID <<- HUMAN_GENE_ID$Symbol
+}
 
-  HUMAN_GENE_ID_SYN <- HUMAN_GENE_ID %>%
-    mutate(Synonyms = strsplit(as.character(Synonyms), "\\|")) %>%
-    unnest(Synonyms)
-
-
+build_gene_disease_reference <- function(){
   # Compile the Gene - Disease Scores
   # This is the meat of this whole project!!
 
   #### OMIM ####
   # Get OMIM Genemap
   # Hope I'm not breaking any laws by doing this...
-  OMIM_conf <- read_tsv("https://data.omim.org/downloads/WIFQrs35Rw-0RbsyXS9pWA/genemap.txt", skip = 3) %>%
-    select("Gene Symbols", "MIM Number", "Confidence")
-  MIMs <- read_tsv("https://data.omim.org/downloads/WIFQrs35Rw-0RbsyXS9pWA/morbidmap.txt", skip = 3) %>% # Download the morbidmap
-    select(-`Cyto Location`, -`Gene Symbols`) # Get rid of cyto location and gene symbols column
-  OMIM <- left_join(OMIM_conf, MIMs, "MIM Number") # Join these tables together
+  message("Downloading the OMIM genemap")
+    suppressMessages(suppressWarnings(
+      OMIM_conf <- read_tsv("https://data.omim.org/downloads/WIFQrs35Rw-0RbsyXS9pWA/genemap.txt", skip = 3) %>%
+        select("Gene Symbols", "MIM Number", "Confidence")
+      ))
+    suppressMessages(suppressWarnings(
+    MIMs <- read_tsv("https://data.omim.org/downloads/WIFQrs35Rw-0RbsyXS9pWA/morbidmap.txt", skip = 3) %>% # Download the morbidmap
+      select(-`Cyto Location`, -`Gene Symbols`) # Get rid of cyto location and gene symbols column
+    ))
+    OMIM <- left_join(OMIM_conf, MIMs, "MIM Number") # Join these tables together
 
 
 
@@ -82,7 +86,8 @@ build_databases <- function(){
 
 
   #### ClinVar ####
-  clinVar <- read_tsv("ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/gene_condition_source_id")
+  message("Downloading ClinVar gene_condition_source_id file")
+  suppressMessages(clinVar <- read_tsv("ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/gene_condition_source_id"))
   clinVar %<>% select(AssociatedGenes, RelatedGenes, DiseaseName, DiseaseMIM)
   clinVar$genes <- paste(clinVar$AssociatedGenes, clinVar$RelatedGenes) %>% gsub("NA", "", .) %>% trimws
   clinVar %<>% select(-AssociatedGenes, -RelatedGenes)
@@ -105,7 +110,10 @@ build_databases <- function(){
 
   #### GWAS ####
   # Get GWAS associations
-  GWAS <- read_tsv("https://www.ebi.ac.uk/gwas/api/search/downloads/full")
+  message("Downloading GWAS gene condition associations")
+  suppressMessages(suppressWarnings(
+    GWAS <- read_tsv("https://www.ebi.ac.uk/gwas/api/search/downloads/full")
+    ))
 
   GWAS_SCORE_WEIGHT <- 0.25
 
@@ -146,6 +154,7 @@ build_databases <- function(){
   DB_COMPILED_GENE_DISEASE_SCORES <- rbind(OMIM_SCORES, ClinVar_SCORES, GWAS_SCORES)
 
   #### Fix Synonymous Gene Names from Different DBs ####
+  if (!exists("HUMAN_GENE_ID")) build_gene_id_syn()
   syns <- HUMAN_GENE_ID$Synonyms %>% strsplit(split = "\\|")
   names(syns) <- HUMAN_GENE_ID$Symbol
   need_fixin <- DB_COMPILED_GENE_DISEASE_SCORES[DB_COMPILED_GENE_DISEASE_SCORES$GENE %in% unlist(syns),]
@@ -158,7 +167,6 @@ build_databases <- function(){
   names(genes) <- syns
   need_fixin %<>% mutate(GENE = genes[GENE])
 
-  DB_COMPILED_GENE_DISEASE_SCORES <- rbind(good, need_fixin)
-  DB_COMPILED_GENE_DISEASE_SCORES %<>% distinct
+  DB_COMPILED_GENE_DISEASE_SCORES <<- rbind(good, need_fixin) %>% distinct
 }
 
