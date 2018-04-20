@@ -1,12 +1,15 @@
-useless_words <- c("disease", "syndrome")
 
+#'
 output_gene_prioritization <- function(disease_term) {
-
+  useless_words <- c("disease", "syndrome")
   # Split the query string into individual words and get rid of common "useless words"
   term_k <-
     disease_term %>% str_split(" ") %>% unlist %>% discard( ~ .x %in% useless_words)
 
   if (length(term_k) > 1){print(paste("Splitting your query into", length(term_k), "searches"))}
+
+  # Make sure databases are all there
+  if(!(exists("doid") & exists("ctd"))) build_databases()
 
   # Run extension on each Term_k
   diseases_k <- lapply(term_k, disease_extension)
@@ -22,12 +25,15 @@ output_gene_prioritization <- function(disease_term) {
       x %>% mutate(Disease = Disease %>% tolower %>% trimws) %>% distinct)
   names(diseases_k) <- term_k
 
+  # Make sure DB_COMPILED_DISEASE_SCORES is in the global environnment
+  if(!exists("DB_COMPILED_GENE_DISEASE_SCORES"))
+
   # Match each disease in diseases_k with the precompiled database
   disease_scores <- lapply(diseases_k, function(x) {
     DB_COMPILED_GENE_DISEASE_SCORES %>% filter(tolower(.$DISEASE) %>% map_lgl( ~ . %in% x$Disease))
   })
 
-  if (max(sapply(relevant_disease_scores, nrow)) == 0)
+  if (max(sapply(disease_scores, nrow)) == 0)
     stop("No disease / gene relationships found. Please adjust your query!!")
 
   # Aggregate the disease_k list

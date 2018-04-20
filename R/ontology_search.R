@@ -6,8 +6,11 @@
 #' Currently, this package loads the CTD Disease ontology and the Disease ongology (doid.obo)
 #'
 retrieve_ontologies <- function(){
+  message("Downloading the Disease ontology")
   doid <-
     get_ontology("http://purl.obolibrary.org/obo/doid.obo", extract_tags = "everything")
+
+  message("Downloading the Clinical Toxicogenomics Database - Disease Names")
   temp <- tempfile()
   download.file("http://ctdbase.org/reports/CTD_diseases.obo.gz", temp)
   ctd <-
@@ -71,7 +74,8 @@ disease_extension <- function(term, exact_match = FALSE) {
   term <- term
 
   doid_results <- ontology_search(term, doid)
-  print("Finished searching the Disease Ontology Database")
+
+  message("Finished searching the Disease Ontology Database")
   if (length(doid_results > 0)) {
     doid_results <-
       cbind(doid_results, rep("DISEASE_ONTOLOGY", length(doid_results)))
@@ -82,7 +86,8 @@ disease_extension <- function(term, exact_match = FALSE) {
 
 
   ctd_results <- ontology_search(term, ctd)
-  print("Finished searching the CTD Medic Database")
+
+  message("Finished searching the CTD Medic Database")
   if (length(ctd_results) > 0) {
     ctd_results <-
       cbind(ctd_results, rep("CTD_DISEASE", length(ctd_results)))
