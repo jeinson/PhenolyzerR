@@ -1,17 +1,20 @@
-require(ontologyIndex)
-require(tidyverse)
-
-setwd("~/../Dropbox/Symbolic_Methods/Term_Project/phenolyzerR/")
-
 ### Right now, I'm just going to focus on extending the disease using terms in disease ontology
 # and CTD Disease. I think this should cover the bases pretty well.
 
-doid <-
-  get_ontology("http://purl.obolibrary.org/obo/doid.obo", extract_tags = "everything")
-ctd <-
-  get_ontology("lib/CTD_diseases.obo", extract_tags = "everything") #Pause on this one for now...
-hpo <-
-  get_ontology("http://purl.obolibrary.org/obo/hp.obo", extract_tags = "everything")
+
+#' Retrieve the obo ontology files needed for disease term descendant searching.
+#' Currently, this package loads the CTD Disease ontology and the Disease ongology (doid.obo)
+#'
+retrieve_ontologies <- function(){
+  doid <-
+    get_ontology("http://purl.obolibrary.org/obo/doid.obo", extract_tags = "everything")
+  temp <- tempfile()
+  download.file("http://ctdbase.org/reports/CTD_diseases.obo.gz", temp)
+  ctd <-
+    get_ontology(temp, extract_tags = "everything") #Pause on this one for now...
+#  hpo <-
+#    get_ontology("http://purl.obolibrary.org/obo/hp.obo", extract_tags = "everything")
+}
 
 cleaner <- function(query) {
   query %>%
@@ -25,7 +28,7 @@ ontology_search <- function(term, ontology, exact_match = FALSE) {
       missing(ontology))
     stop("Please supply a valid ontology file")
 
-  term <- cleaner(term)
+  term %<>% cleaner
   db_names_clean <- cleaner(ontology$name)
   db_syn_clean <- cleaner(ontology$synonym)
 
@@ -58,13 +61,14 @@ ontology_search <- function(term, ontology, exact_match = FALSE) {
   names <- ontology$name[id]
   names <-
     c(names,
-      doid$synonym[id] %>% unlist %>% gsub("^\\\"", "", .) %>% gsub("\\\".+", "", .)) # add synonym terms
+      ontology$synonym[id] %>% unlist %>% gsub("^\\\"", "", .) %>% gsub("\\\".+", "", .)) # add synonym terms
   names
 }
 
+
+
 disease_extension <- function(term, exact_match = FALSE) {
   term <- term
-
 
   doid_results <- ontology_search(term, doid)
   print("Finished searching the Disease Ontology Database")
