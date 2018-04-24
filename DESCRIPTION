@@ -4,8 +4,8 @@ Version: 0.0.0.1
 Authors@R: person("Jonah", "Einson", email = "jee2142@cumc.columbia.edu", role = c("aut", "cre"))
 Description: This package is an R implementation of the Phenolyzer algorithm, by Kai Wang et. al. It utlizes the tidyverse package as much as possible, for easy output in downstream applications. 
 Depends: R (>= 3.4.3)
-License: What license is it under?
+License: MIT
+Imports: dplyr, magrittr, ontologyIndex, purrr, readr, stringr, tibble, tidyr
 Encoding: UTF-8
 LazyData: true
-Imports: dplyr, magrittr, ontologyIndex, purrr, readr, stringr,tibble, tidyr
 RoxygenNote: 6.0.1

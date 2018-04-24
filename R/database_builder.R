@@ -11,6 +11,14 @@ build_gene_id_syn <- function(){
   )
 }
 
+#' Aggregate all the databases needed to run PhenolyzerR
+#'
+#' `build_gene_disease_reference` is downloads gene-disease mappings from OMIM, ClinVar, and the GWAS repository.
+#' This will only need to be run once. When the script finishes running,
+#' you will have a table called `DB_COMPILED_GENE_DISEASE_SCORES` in your local environment.
+#'
+#' @return A Tibble
+#'
 #' @export
 build_gene_disease_reference <- function(){
   # Compile the Gene - Disease Scores
@@ -20,10 +28,13 @@ build_gene_disease_reference <- function(){
   # Get OMIM Genemap
   # Hope I'm not breaking any laws by doing this...
   message("Downloading the OMIM genemap")
+  tryCatch(
     suppressMessages(suppressWarnings(
       OMIM_conf <- read_tsv("https://data.omim.org/downloads/WIFQrs35Rw-0RbsyXS9pWA/genemap.txt", skip = 3) %>%
         select("Gene Symbols", "MIM Number", "Confidence")
-      ))
+    )),
+    error = function(e){message("Unable to Connect to OMIM. Please try again!")}
+  )
     suppressMessages(suppressWarnings(
     MIMs <- read_tsv("https://data.omim.org/downloads/WIFQrs35Rw-0RbsyXS9pWA/morbidmap.txt", skip = 3) %>% # Download the morbidmap
       select(-`Cyto Location`, -`Gene Symbols`) # Get rid of cyto location and gene symbols column
@@ -166,6 +177,6 @@ build_gene_disease_reference <- function(){
   names(genes) <- syns
   need_fixin %<>% mutate(GENE = genes[GENE])
 
-  DB_COMPILED_GENE_DISEASE_SCORES <<- rbind(good, need_fixin) %>% distinct
+  DB_COMPILED_GENE_DISEASE_SCORES <<- rbind(good, need_fixin) %>% distinct %>% mutate(GENE = trimws(GENE))
 }
 

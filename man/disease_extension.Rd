@@ -2,10 +2,24 @@
 % Please edit documentation in R/output_gene_prioritization.R
 \name{disease_extension}
 \alias{disease_extension}
-\title{This function uses the public ontology_search function to try both databases}
+\title{Perform a descendant search for a query term}
 \usage{
-disease_extension(term, exact_match = FALSE)
+disease_extension(term, ontologies = c("ctd", "doid"), exact_match = FALSE)
+}
+\arguments{
+\item{term}{A query term}
+
+\item{ontologies}{Defaults to `c("ctd", "doid")`}
+
+\item{exact_match}{Defaults to `FALSE`. If true, no partial string mathching is performed.}
 }
 \description{
-This function uses the public ontology_search function to try both databases
+This function will take a query term, and find all descendants and neighbors of that term
+in the specified ontologies. By default, a match is considered if a the query is a subset
+of a database entry. i.e., "alzheimer" matches "Alzheimer's disease".
+This process is important for increasing the chances of
+getting a string match in the disease-gene databases.
+}
+\seealso{
+[PhenolyzerR::output_gene_prioritizaion], where this function is called
 }
