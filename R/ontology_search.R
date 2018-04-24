@@ -1,22 +1,20 @@
-#' Retrieve the obo ontology files needed for disease term descendant searching.
-#' Currently, this package loads the CTD Disease ontology and the Disease ongology (doid.obo)
+#' Retrieve ontology files from the internet
+#'
+#' retrieve_ontologies() adds `doid` and `ctd` to the local environment
 #' @export
-
+#' @rdname case
 retrieve_ontologies <- function(){
   message("Downloading the Disease ontology")
-  doid <<-
+  DOID <<-
     get_ontology("http://purl.obolibrary.org/obo/doid.obo", extract_tags = "everything")
 
   message("Downloading the Clinical Toxicogenomics Database - Disease Names")
   temp <- tempfile()
   download.file("http://ctdbase.org/reports/CTD_diseases.obo.gz", temp)
-  ctd <<-
-    get_ontology(temp, extract_tags = "everything") #Pause on this one for now...
-#  hpo <-
-#    get_ontology("http://purl.obolibrary.org/obo/hp.obo", extract_tags = "everything")
+  CTD <<-
+    get_ontology(temp, extract_tags = "everything")
 }
 
-#'
 .cleaner <- function(query) {
   query %>%
     str_remove("'s") %>%
@@ -24,15 +22,16 @@ retrieve_ontologies <- function(){
     str_remove(" \\d+$")
 }
 
-#' @export
-ontology_search <- function(term, ontology, exact_match = FALSE) {
+# Internal function
+
+.ontology_search <- function(term, ontology, exact_match = FALSE) {
   if (class(ontology) != "ontology_index" |
       missing(ontology))
     stop("Please supply a valid ontology file")
 
   term %<>% .cleaner
-  db_names_clean <- cleaner(ontology$name)
-  db_syn_clean <- cleaner(ontology$synonym)
+  db_names_clean <- .cleaner(ontology$name)
+  db_syn_clean <- .cleaner(ontology$synonym)
 
   if (exact_match) {
     id <-
