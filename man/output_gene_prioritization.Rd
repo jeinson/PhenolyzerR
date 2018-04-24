@@ -6,8 +6,13 @@
 \usage{
 output_gene_prioritization(disease_term, ontologies = c("ctd", "doid"))
 }
+\arguments{
+\item{disease_term}{A disease for which to find related genes}
+
+\item{ontologies}{Defaults to c("ctd", "doid").}
+}
 \description{
-This function calls `disease_extension` to perform a descendant search, then prioritizes the
+This function calls \code{disease_extension} to perform a descendant search, then prioritizes the
 disease terms matched to the disease-gene databases using system described in the paper.
 }
 \details{
@@ -17,27 +22,5 @@ all scores by the max score.
 }
 \examples{
 output_gene_prioritization("alzheimer's disease")
-# A tibble: 20 x 3
-GeneID GENE         reported_SCORE
-<int> <chr>                 <dbl>
-  1      2 A2M                  1.00
-2   2629 GBA                  0.531
-3   3077 HFE                  0.500
-4   4353 MPO                  0.500
-5    348 APOE                 0.375
-6     NA LOC100129500         0.375
-7   3660 IRF2                 0.250
-8 257019 FRMD3                0.250
-9  80309 SPHKAP               0.250
-10   4647 MYO7A                0.125
-11  54856 GON4L                0.125
-12  29780 PARVB                0.125
-13  10611 PDLIM5               0.125
-14   1501 CTNND2               0.125
-15  84253 GARNL3               0.125
-16  10681 GNB5                 0.125
-17  51028 VPS36                0.125
-18  23646 PLD3                 0.0312
-19   6622 SNCA                 0.0312
-20   6620 SNCB                 0.0312
+output_gene_prioritization("alzheimer's disease", ontologies = "doid")
 }

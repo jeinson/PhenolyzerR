@@ -10,7 +10,7 @@
 #' @param ontologies Defaults to `c("ctd", "doid")`
 #' @param exact_match Defaults to `FALSE`. If true, no partial string mathching is performed.
 #'
-#' @seealso [PhenolyzerR::output_gene_prioritizaion], where this function is called
+#' @seealso \code{\link{output_gene_prioritization}}, where this function is called
 #'
 #' @export
 disease_extension <- function(term, ontologies = c("ctd", "doid"), exact_match = FALSE) {
@@ -52,6 +52,10 @@ disease_extension <- function(term, ontologies = c("ctd", "doid"), exact_match =
 
   output <- as.tibble(rbind(doid_results, ctd_results))
   if(length(output) == 0) stop("No matching terms were found for you query :-( Please check your spelling!")
+
+  # Include the original input in the output table. This can help when the actual term isn't in the database
+  # i.e. "lymphoma" has a lot of descendants, is no in the DB by itself
+  output <- rbind(tibble(doid_results = term, V1 = "MY_TERM"), output)
   names(output) <- c("Disease", "Source")
   output$Source <- output$Source %>% as.factor
   output
@@ -66,31 +70,13 @@ disease_extension <- function(term, ontologies = c("ctd", "doid"), exact_match =
 #' In brief, each database has its own quality metrics. These are given an ad hoc score, and matches
 #' are weighted based on this score. The prioritized list is ordered, and normalized by diving through
 #' all scores by the max score.
+#' @param disease_term A disease for which to find related genes
+#' @param ontologies Defaults to c("ctd", "doid").
+#'
 #' @examples
 #' output_gene_prioritization("alzheimer's disease")
-#' # A tibble: 20 x 3
-#'GeneID GENE         reported_SCORE
-#'<int> <chr>                 <dbl>
-#'   1      2 A2M                  1.00
-#' 2   2629 GBA                  0.531
-#' 3   3077 HFE                  0.500
-#' 4   4353 MPO                  0.500
-#' 5    348 APOE                 0.375
-#' 6     NA LOC100129500         0.375
-#' 7   3660 IRF2                 0.250
-#' 8 257019 FRMD3                0.250
-#' 9  80309 SPHKAP               0.250
-#' 10   4647 MYO7A                0.125
-#' 11  54856 GON4L                0.125
-#' 12  29780 PARVB                0.125
-#' 13  10611 PDLIM5               0.125
-#' 14   1501 CTNND2               0.125
-#' 15  84253 GARNL3               0.125
-#' 16  10681 GNB5                 0.125
-#' 17  51028 VPS36                0.125
-#' 18  23646 PLD3                 0.0312
-#' 19   6622 SNCA                 0.0312
-#' 20   6620 SNCB                 0.0312
+#' output_gene_prioritization("alzheimer's disease", ontologies = "doid")
+
 #' @export
 output_gene_prioritization <- function(disease_term, ontologies = c("ctd", "doid")) {
 
@@ -105,7 +91,7 @@ output_gene_prioritization <- function(disease_term, ontologies = c("ctd", "doid
   if(!(exists("DOID") & exists("CTD"))) build_gene_id_syn()
 
   # Run extension on each Term_k
-  diseases_k <- lapply(term_k, disease_extension)
+  diseases_k <- lapply(term_k, function(k) disease_extension(k, ontologies = ontologies))
   if (max(sapply(diseases_k, nrow)) == 0)
     stop("No matching disease terms found :-( Please check your spelling!!")
 
@@ -159,10 +145,5 @@ output_gene_prioritization <- function(disease_term, ontologies = c("ctd", "doid
 
   out
   # Possible place to put in a wordcloud function, after phenotyping
-
-  # 178
-
-  # Gene scoring
-  #
 
 }

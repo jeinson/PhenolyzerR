@@ -2,7 +2,7 @@
 #'
 #' retrieve_ontologies() adds `doid` and `ctd` to the local environment
 #' @export
-#' @rdname case
+
 retrieve_ontologies <- function(){
   message("Downloading the Disease ontology")
   DOID <<-

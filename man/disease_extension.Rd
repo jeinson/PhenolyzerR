@@ -9,9 +9,9 @@ disease_extension(term, ontologies = c("ctd", "doid"), exact_match = FALSE)
 \arguments{
 \item{term}{A query term}
 
-\item{ontologies}{Defaults to `c("ctd", "doid")`}
+\item{ontologies}{Defaults to \code{c("ctd", "doid")}}
 
-\item{exact_match}{Defaults to `FALSE`. If true, no partial string mathching is performed.}
+\item{exact_match}{Defaults to \code{FALSE}. If true, no partial string mathching is performed.}
 }
 \description{
 This function will take a query term, and find all descendants and neighbors of that term
@@ -21,5 +21,5 @@ This process is important for increasing the chances of
 getting a string match in the disease-gene databases.
 }
 \seealso{
-[PhenolyzerR::output_gene_prioritizaion], where this function is called
+\code{\link{output_gene_prioritization}}, where this function is called
 }

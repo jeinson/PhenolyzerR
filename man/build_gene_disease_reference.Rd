@@ -10,7 +10,7 @@ build_gene_disease_reference()
 A Tibble
 }
 \description{
-`build_gene_disease_reference` is downloads gene-disease mappings from OMIM, ClinVar, and the GWAS repository.
+\code{build_gene_disease_reference} is downloads gene-disease mappings from OMIM, ClinVar, and the GWAS repository.
 This will only need to be run once. When the script finishes running,
-you will have a table called `DB_COMPILED_GENE_DISEASE_SCORES` in your local environment.
+you will have a table called \code{DB_COMPILED_GENE_DISEASE_SCORES} in your local environment.
 }

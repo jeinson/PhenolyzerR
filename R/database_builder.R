@@ -2,6 +2,15 @@
 #' and synonyms in the global environment
 #' @example build_gene_id_syn() -> GENE_ID
 #' @export
+#'
+#' @import tibble
+#' @import magrittr
+#' @import stringr
+#' @import dplyr
+#' @import ontologyIndex
+#' @import purrr
+#' @import readr
+#' @import tidyr
 build_gene_id_syn <- function(){
   #### RefSeq Gene IDs ####
   message("Downloading the RefSeq gene information table")
@@ -19,6 +28,9 @@ build_gene_id_syn <- function(){
 #'
 #' @return A Tibble
 #'
+#' @importFrom stats aggregate
+#' @importFrom stats complete.cases
+#' @importFrom utils download.file
 #' @export
 build_gene_disease_reference <- function(){
   # Compile the Gene - Disease Scores

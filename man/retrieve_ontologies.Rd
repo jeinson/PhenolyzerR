@@ -7,5 +7,5 @@
 retrieve_ontologies()
 }
 \description{
-retrieve_ontologies() adds `doid` and `ctd` to the local environment
+retrieve_ontologies() adds \code{doid} and \code{ctd} to the local environment
 }
