@@ -72,13 +72,17 @@ disease_extension <- function(term, ontologies = c("ctd", "doid"), exact_match =
 #' all scores by the max score.
 #' @param disease_term A disease for which to find related genes
 #' @param ontologies Defaults to c("ctd", "doid").
+#' @param output_mode Specifies if the output is a table of genes, or a list of tibbles with individual genes and source information
 #'
 #' @examples
 #' output_gene_prioritization("alzheimer's disease")
 #' output_gene_prioritization("alzheimer's disease", ontologies = "doid")
 
 #' @export
-output_gene_prioritization <- function(disease_term, ontologies = c("ctd", "doid")) {
+output_gene_prioritization <- function(disease_term,
+                                       ontologies = c("ctd", "doid"),
+                                       output_mode = "aggregate")
+  {
 
   useless_words <- c("disease", "syndrome")
 
@@ -120,32 +124,66 @@ output_gene_prioritization <- function(disease_term, ontologies = c("ctd", "doid
 
   # Aggregate the disease_k list
 
-  out <-
-    # For each disease in diseases_k:
+  if (output_mode == "aggregate"){
+    out <-
+      # For each disease in diseases_k:
       # aggregate all genes and sum scores of genes which appear more than once
       # divide through by the total genes that appear
-    lapply(disease_scores, function(disease_k)
+      lapply(disease_scores, function(disease_k)
       {disease_k %>% group_by(GENE) %>% summarise(total_SCORE = sum(SCORE) / nrow(disease_k))}) %>%
 
-    # Combine all k tibbles
-    do.call("rbind", .) %>%
+      # Combine all k tibbles
+      # This is the first time the Term_k's from the input are combined!!!
+      do.call("rbind", .) %>%
 
-    # Aggregate by gene again
-    group_by(GENE) %>% summarise(reported_SCORE = sum(total_SCORE)) %>%
+      # Aggregate by gene again
+      group_by(GENE) %>% summarise(reported_SCORE = sum(total_SCORE)) %>%
 
-    # Sort the big tibble by decreasing score
-    arrange(desc(reported_SCORE))
+      # Sort the big tibble by decreasing score
+      arrange(desc(reported_SCORE))
 
-  # Divide scores by the max (normalization step)
-  out$reported_SCORE <- out$reported_SCORE / out$reported_SCORE[1]
+    # Divide scores by the max (normalization step)
+    out$reported_SCORE <- out$reported_SCORE / out$reported_SCORE[1]
 
-  # Add gene numbers to the final output tibble
-  out <- left_join(out, HUMAN_GENE_ID %>% select(GeneID, Symbol), by = c("GENE" = "Symbol"))
+    # Add gene numbers to the final output tibble
+    out <- left_join(out, HUMAN_GENE_ID %>% select(GeneID, Symbol), by = c("GENE" = "Symbol"))
 
-  # Get it in the right order
-  out %<>% select("GeneID", "GENE", "reported_SCORE")
+    # Get it in the right order
+    out %<>% select("GeneID", "GENE", "reported_SCORE")
+  } else if (output_mode == "list"){
+    out <-
+      disease_scores %>% do.call("rbind", .) %>% split(.$GENE)
+
+    out_score <- sapply(out, function(x) x$SCORE %>% sum) %>% sort(decreasing = TRUE)
+    out_score_norm <- out_score / max(out_score) %>% round(3)
+
+    out <- out[names(out_score)]
+    names(out) <- paste(names(out_score), "Raw score:", out_score, "Normalized score:", out_score_norm)
+  }
 
   out
   # Possible place to put in a wordcloud function, after phenotyping
 
+}
+
+#' Write an itemized gene list to file
+#'
+#' If you want to see the sources for each gene call, this function will write the results
+#' of `output_gene_prioritization` with `output_mode == "list"` to a text file that is conveniently
+#' readable.
+#'
+#' @param itemized_gene_list The output of list `output_gene_prioritization` with `output_mode == "list"`
+#' @param filename File name to write to the the filesystem
+
+write_gene_list <- function(itemized_gene_list, filename){
+
+  # Write the file header
+  write_lines(paste("Number of genes identified in the databases:", length(itemized_gene_list)), filename)
+
+  # For each gene in the gene list, write the gene rank information, then write the table
+  for (gene in names(itemized_gene_list)) {
+    write_lines(gene, filename, append = TRUE)
+    write_tsv(as.data.frame(itemized_gene_list[gene]), filename, append = TRUE)
+    write_lines("", filename, append = TRUE)
+  }
 }
