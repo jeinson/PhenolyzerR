@@ -95,6 +95,8 @@ output_gene_prioritization <- function(disease_term, ontologies = c("ctd", "doid
   if (max(sapply(diseases_k, nrow)) == 0)
     stop("No matching disease terms found :-( Please check your spelling!!")
 
+  message("Disease term extension completed")
+
   # Clean each Term_k and remove duplicates
   for (i in 1:length(diseases_k)) {
     diseases_k[[i]]$Disease %<>% .cleaner

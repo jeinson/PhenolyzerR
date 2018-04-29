@@ -15,6 +15,8 @@ retrieve_ontologies <- function(){
     get_ontology(temp, extract_tags = "everything")
 }
 
+# Internal function
+# Used to clean up input disease name strings
 .cleaner <- function(query) {
   query %>%
     str_remove("'s") %>%
@@ -23,7 +25,6 @@ retrieve_ontologies <- function(){
 }
 
 # Internal function
-
 .ontology_search <- function(term, ontology, exact_match = FALSE) {
   if (class(ontology) != "ontology_index" |
       missing(ontology))

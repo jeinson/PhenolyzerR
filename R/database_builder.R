@@ -45,7 +45,7 @@ build_gene_disease_reference <- function(){
       OMIM_conf <- read_tsv("https://data.omim.org/downloads/WIFQrs35Rw-0RbsyXS9pWA/genemap.txt", skip = 3) %>%
         select("Gene Symbols", "MIM Number", "Confidence")
     )),
-    error = function(e){message("Unable to Connect to OMIM. Please try again!")}
+    error = function(e){message("Unable to Connect to OMIM. Please try again! If problem persists, the URL may have expired.")}
   )
     suppressMessages(suppressWarnings(
     MIMs <- read_tsv("https://data.omim.org/downloads/WIFQrs35Rw-0RbsyXS9pWA/morbidmap.txt", skip = 3) %>% # Download the morbidmap
