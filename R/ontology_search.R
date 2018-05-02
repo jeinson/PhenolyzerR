@@ -21,7 +21,8 @@ retrieve_ontologies <- function(){
   query %>%
     str_remove("'s") %>%
     str_remove("[Ll]ate onset|[Ff]amilial") %>%
-    str_remove(" \\d+$")
+    str_remove(" \\d+$") %>%
+    str_remove(",")
 }
 
 # Internal function

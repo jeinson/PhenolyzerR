@@ -12,6 +12,9 @@
 #'
 #' @seealso \code{\link{output_gene_prioritization}}, where this function is called
 #'
+#' @import RColorBrewer
+#' @import wordcloud
+#'
 #' @export
 disease_extension <- function(term, ontologies = c("ctd", "doid"), exact_match = FALSE) {
 
@@ -81,15 +84,20 @@ disease_extension <- function(term, ontologies = c("ctd", "doid"), exact_match =
 #' @export
 output_gene_prioritization <- function(disease_term,
                                        ontologies = c("ctd", "doid"),
-                                       output_mode = "aggregate")
+                                       output_mode = "aggregate",
+                                       wordcloud = FALSE)
   {
 
   useless_words <- c("disease", "syndrome")
 
-  # Split the query string into individual words and get rid of common "useless words"
-  term_k <- disease_term %>% str_split(" ") %>% unlist %>% discard( ~ .x %in% useless_words)
+  # Split the query string into individual words and get rid of common "useless words", and clean it up
+  term_k <- disease_term %>%
+    str_split(" ") %>%
+    unlist %>%
+    discard( ~ .x %in% useless_words) %>%
+    tolower %>% .cleaner
 
-  if (length(term_k) > 1){print(paste("Splitting your query into", length(term_k), "searches"))}
+  if (length(term_k) > 1){message(paste("Splitting your query into", length(term_k), "searches"))}
 
   # Make sure databases are all there
   if(!(exists("DOID") & exists("CTD"))) build_gene_id_syn()
@@ -114,10 +122,25 @@ output_gene_prioritization <- function(disease_term,
   if(!exists("DB_COMPILED_GENE_DISEASE_SCORES")) build_gene_disease_reference()
 
   # Match each disease in diseases_k with the precompiled database
-  ### the most important part of this whole thing!!! ###
-  disease_scores <- lapply(diseases_k, function(x) {
-    DB_COMPILED_GENE_DISEASE_SCORES %>% filter(tolower(.$DISEASE) %>% map_lgl( ~ . %in% x$Disease))
+  #### the most important part of this whole thing!!! ####
+
+  message("Matching to database with extended terms!")
+  disease_scores1 <- lapply(diseases_k, function(x) {
+    DB_COMPILED_GENE_DISEASE_SCORES %>%
+      filter( tolower(.cleaner(.$DISEASE)) %>% map_lgl( ~ . %in% x$Disease) )
+    })
+
+  # Match to the precompiled database by greping the original term to the precompiled database
+
+  message("Matching to database with input term!")
+  disease_scores2 <- lapply(term_k, function(k) {
+    DB_COMPILED_GENE_DISEASE_SCORES %>%
+      filter(grepl(k, tolower(.cleaner(DISEASE)), ignore.case = TRUE))
   })
+
+
+  # Combine these results and take the distinct matches
+  disease_scores <- c(disease_scores1, disease_scores2)
 
   if (max(sapply(disease_scores, nrow)) == 0)
     stop("No disease / gene relationships found. Please adjust your query!!")
@@ -161,8 +184,18 @@ output_gene_prioritization <- function(disease_term,
     names(out) <- paste(names(out_score), "Raw score:", out_score, "Normalized score:", out_score_norm)
   }
 
-  out
-  # Possible place to put in a wordcloud function, after phenotyping
+  if(wordcloud){
+    pal <- brewer.pal(6, "YlOrRd")
+    par(mar = rep(0,4), bg = rgb(0, 34, 64, maxColorValue = 255))
+    wordcloud(
+      out$GENE,
+      out$reported_SCORE * 500,
+      colors = pal,
+      max.words = 100
+    )
+  }
+
+return(out)
 
 }
 
@@ -174,7 +207,8 @@ output_gene_prioritization <- function(disease_term,
 #'
 #' @param itemized_gene_list The output of list `output_gene_prioritization` with `output_mode == "list"`
 #' @param filename File name to write to the the filesystem
-
+#'
+#' @export
 write_gene_list <- function(itemized_gene_list, filename){
 
   # Write the file header

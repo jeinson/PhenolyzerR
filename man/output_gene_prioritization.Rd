@@ -4,12 +4,15 @@
 \alias{output_gene_prioritization}
 \title{Retrieve genes related to a disease query}
 \usage{
-output_gene_prioritization(disease_term, ontologies = c("ctd", "doid"))
+output_gene_prioritization(disease_term, ontologies = c("ctd", "doid"),
+  output_mode = "aggregate", wordcloud = FALSE)
 }
 \arguments{
 \item{disease_term}{A disease for which to find related genes}
 
 \item{ontologies}{Defaults to c("ctd", "doid").}
+
+\item{output_mode}{Specifies if the output is a table of genes, or a list of tibbles with individual genes and source information}
 }
 \description{
 This function calls \code{disease_extension} to perform a descendant search, then prioritizes the
