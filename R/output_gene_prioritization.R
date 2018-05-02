@@ -76,6 +76,7 @@ disease_extension <- function(term, ontologies = c("ctd", "doid"), exact_match =
 #' @param disease_term A disease for which to find related genes
 #' @param ontologies Defaults to c("ctd", "doid").
 #' @param split Logical. Specify if the input term should be split into two words, if it's length is greater than 1. Useful for terms like "cystic fibrosis" where individual words could map to erroneous diseases
+#' @param return_output Logical. Specify if the output should be returned. Useful if you only want a wordcloud.
 #' @param output_mode Specifies if the output is a table of genes, or a list of tibbles with individual genes and source information
 #'
 #' @examples
@@ -87,6 +88,7 @@ output_gene_prioritization <- function(disease_term,
                                        ontologies = c("ctd", "doid"),
                                        split = TRUE,
                                        output_mode = "aggregate",
+                                       return_output = TRUE,
                                        wordcloud = FALSE)
   {
 
@@ -203,7 +205,7 @@ output_gene_prioritization <- function(disease_term,
     )
   }
 
-return(out)
+  if(return_output) return(out)
 
 }
 

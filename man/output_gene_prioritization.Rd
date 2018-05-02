@@ -5,7 +5,8 @@
 \title{Retrieve genes related to a disease query}
 \usage{
 output_gene_prioritization(disease_term, ontologies = c("ctd", "doid"),
-  split = TRUE, output_mode = "aggregate", wordcloud = FALSE)
+  split = TRUE, output_mode = "aggregate", return_output = TRUE,
+  wordcloud = FALSE)
 }
 \arguments{
 \item{disease_term}{A disease for which to find related genes}
@@ -15,6 +16,8 @@ output_gene_prioritization(disease_term, ontologies = c("ctd", "doid"),
 \item{split}{Logical. Specify if the input term should be split into two words, if it's length is greater than 1. Useful for terms like "cystic fibrosis" where individual words could map to erroneous diseases}
 
 \item{output_mode}{Specifies if the output is a table of genes, or a list of tibbles with individual genes and source information}
+
+\item{return_output}{Logical. Specify if the output should be returned. Useful if you only want a wordcloud.}
 }
 \description{
 This function calls \code{disease_extension} to perform a descendant search, then prioritizes the
