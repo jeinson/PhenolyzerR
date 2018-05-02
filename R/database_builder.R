@@ -176,6 +176,8 @@ build_gene_disease_reference <- function(){
   DB_COMPILED_GENE_DISEASE_SCORES <- rbind(OMIM_SCORES, ClinVar_SCORES, GWAS_SCORES)
 
   #### Fix Synonymous Gene Names from Different DBs ####
+  message("Fixing synonymous gene names across databases")
+
   if (!exists("HUMAN_GENE_ID")) build_gene_id_syn()
   syns <- HUMAN_GENE_ID$Synonyms %>% strsplit(split = "\\|")
   names(syns) <- HUMAN_GENE_ID$Symbol
@@ -189,6 +191,26 @@ build_gene_disease_reference <- function(){
   names(genes) <- syns
   need_fixin %<>% mutate(GENE = genes[GENE])
 
+  message("Done!")
+
   DB_COMPILED_GENE_DISEASE_SCORES <<- rbind(good, need_fixin) %>% distinct %>% mutate(GENE = trimws(GENE))
 }
+
+#' @export
+build_gene_prediction_reference <- function(){
+
+  message("Downloading the whole bioGrid database")
+  message("I'll get rid of this huge file :-P")
+  temp <- tempfile(pattern = "Biogrid", fileext = ".tsv")
+  download.file("https://downloads.thebiogrid.org/Download/BioGRID/Release-Archive/BIOGRID-3.4.160/BIOGRID-ALL-3.4.160.tab2.zip",temp)
+  bioGrid <- read_tsv(unzip(temp))
+  unlink(temp)
+
+  bioGrid %>%
+    filter(`Organism Interactor A` == 9606 & `Organism Interactor B` == 9606) %>%
+    filter(Score != "-") %>%
+    select(`Official Symbol Interactor A`, `Official Symbol Interactor B`, Score, `Source Database`)
+
+  }
+
 
