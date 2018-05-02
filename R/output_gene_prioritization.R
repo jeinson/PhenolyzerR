@@ -75,6 +75,7 @@ disease_extension <- function(term, ontologies = c("ctd", "doid"), exact_match =
 #' all scores by the max score.
 #' @param disease_term A disease for which to find related genes
 #' @param ontologies Defaults to c("ctd", "doid").
+#' @param split Logical. Specify if the input term should be split into two words, if it's length is greater than 1. Useful for terms like "cystic fibrosis" where individual words could map to erroneous diseases
 #' @param output_mode Specifies if the output is a table of genes, or a list of tibbles with individual genes and source information
 #'
 #' @examples
@@ -84,6 +85,7 @@ disease_extension <- function(term, ontologies = c("ctd", "doid"), exact_match =
 #' @export
 output_gene_prioritization <- function(disease_term,
                                        ontologies = c("ctd", "doid"),
+                                       split = TRUE,
                                        output_mode = "aggregate",
                                        wordcloud = FALSE)
   {
@@ -91,13 +93,19 @@ output_gene_prioritization <- function(disease_term,
   useless_words <- c("disease", "syndrome")
 
   # Split the query string into individual words and get rid of common "useless words", and clean it up
-  term_k <- disease_term %>%
-    str_split(" ") %>%
-    unlist %>%
-    discard( ~ .x %in% useless_words) %>%
-    tolower %>% .cleaner
+  if (split) {
+    term_k <- disease_term %>%
+      str_split(" ") %>%
+      unlist %>%
+      discard( ~ .x %in% useless_words) %>%
+      tolower %>% .cleaner
+    if (length(term_k) > 1){message(paste("Splitting your query into", length(term_k), "searches"))}
+  } else {
+    message("Term splitting will not be performed")
+    term_k <- disease_term %>% tolower %>% .cleaner
+  }
 
-  if (length(term_k) > 1){message(paste("Splitting your query into", length(term_k), "searches"))}
+
 
   # Make sure databases are all there
   if(!(exists("DOID") & exists("CTD"))) build_gene_id_syn()
