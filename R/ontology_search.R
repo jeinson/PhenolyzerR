@@ -33,7 +33,7 @@ retrieve_ontologies <- function(){
 
   term %<>% .cleaner
   db_names_clean <- .cleaner(ontology$name)
-  db_syn_clean <- .cleaner(ontology$synonym)
+  db_syn_clean <- suppressWarnings(.cleaner(ontology$synonym))
 
   if (exact_match) {
     id <-
