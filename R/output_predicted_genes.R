@@ -1,17 +1,61 @@
+#' Retrieve GO Information
+#'
+#' These function download the GO OBO file and GO annotation file, which are used by the `output_predicted_genes`
+#' function.
+#'
+#' @return NULL, Puts variables GO_GAF and GO in your local environment
+#' @export
+#'
 retrieve_go_information <- function(){
+  message("Downloading the GO GAF file, relating genes to GO Terms")
   GO_GAF <- read_tsv("http://geneontology.org/gene-associations/goa_human.gaf.gz",
                      comment = "!", col_names = FALSE) %>%
     suppressWarnings %>%
     select(X3, X5)
   names(GO_GAF) <- c("GENE", "GO_TERM")
-  GO_GAF %<>% filter(GO_TERM %in% GO$id)
+  GO_GAF %<>% filter(GO_TERM %in% GO$id) %>% distinct
   GO_GAF <<- GO_GAF
 }
 
-predict_genes_from_seed_list <- function(seed_gene_list) {
 
-  if(!(exists("GO_GAF") & exists("CTD"))) retrieve_go_information()
-  seed_genes <- seed_gene_list$GENE
+#' @export
+#' @rdname retrieve_go_information
+retrieve_go_OBO <- function(){
+  message("Downloading the Gene Ontology (GO) OBO file")
+  GO <<- get_ontology("http://purl.obolibrary.org/obo/go.obo")
+}
+
+#' Predict disease genes from a seed gene list
+#'
+#' This function utlizes the structure of the Gene Ontology resource to predict
+#' unreported disease genes from a list of seed genes. It accomplishes this task
+#' by finding the most granular GO term that a particular gene belongs to, and
+#' collecting all other genes belonging to that term. It scores predicted genes
+#' based on their frequencies in the related GO terms.
+#'
+#' By default, only 10 seed genes are used to predict new genes. This can be changed, but increasing
+#' this parameter will increase runtime exponentially
+#'
+#' @param seed_gene_list The tibble outputted by 'output_gene_prioritization'
+#' @param n_seeds The number of seed genes to use to extend genes. Defaults to 10
+#'
+#' @return A tibble
+#' @export
+#'
+#' @examples
+#' autism_seed_genes <- output_gene_prioritization("autism")
+#' output_predicted_genes(autism_seed_genes)
+#'
+output_predicted_genes <- function(seed_gene_list, n_seeds = 10) {
+
+  if(sum(names(seed_gene_list) != c("GeneID", "GENE", "reported_SCORE")) > 1)
+    stop("The input object must be the output of 'output_gene_prioritization'. Please try again!")
+
+  # Check to make sure the required files are in your local environment
+  if(!(exists("GO"))) retrieve_go_OBO()
+  if(!(exists("GO_GAF"))) retrieve_go_information()
+
+  seed_genes <- seed_gene_list$GENE %>% .[1:n_seeds]
 
   score <- seed_gene_list$reported_SCORE
   names(score) <- seed_genes
@@ -21,8 +65,10 @@ predict_genes_from_seed_list <- function(seed_gene_list) {
 
   # For each gene in the seed gene list, find related genes given the following protocol
   extended_genes_from_seeds_list <- lapply(seed_genes, function(gene) {
+
+    # Get the number of children for each matched GO term
     n_children <-
-      GO$children[filter(GO_GAF, GENE == gene)$GO_TERM] %>% map(length) %>% unlist
+      GO$children[filter(GO_GAF, GENE == gene)$GO_TERM] %>% map_dbl(length)
 
     # Get the most granular GO terms that the gene belongs to. In most cases, this is a GO term
     # with no children
