@@ -12,6 +12,7 @@
 #' @import readr
 #' @import tidyr
 #' @import RColorBrewer
+#' @import wordcloud
 build_gene_id_syn <- function(){
   #### RefSeq Gene IDs ####
   message("Downloading the RefSeq gene information table")
