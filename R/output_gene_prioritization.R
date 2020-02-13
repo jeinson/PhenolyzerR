@@ -51,7 +51,7 @@ disease_extension <- function(term, ontologies = c("ctd", "doid"), exact_match =
     ctd_results <-
     tibble(a = character(0), b = character(0))  # If no results found, make a dummy variable
 
-  output <- as.tibble(rbind(doid_results, ctd_results))
+  output <- as_tibble(rbind(doid_results, ctd_results))
   if(length(output) == 0) stop("No matching terms were found for you query :-( Please check your spelling!")
 
   # Include the original input in the output table. This can help when the actual term isn't in the database
