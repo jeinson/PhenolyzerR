@@ -56,7 +56,7 @@ disease_extension <- function(term, ontologies = c("ctd", "doid"), exact_match =
 
   # Include the original input in the output table. This can help when the actual term isn't in the database
   # i.e. "lymphoma" has a lot of descendants, is no in the DB by itself
-  output <- rbind(tibble(doid_results = term, V1 = "MY_TERM"), output)
+  output <- rbind(tibble(doid_results = term, V2 = "MY_TERM"), output)
   names(output) <- c("Disease", "Source")
   output$Source <- output$Source %>% as.factor
   output
